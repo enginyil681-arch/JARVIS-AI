@@ -55,6 +55,8 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import java.util.Calendar
 import java.util.Locale
+import org.json.JSONArray
+import org.json.JSONObject
 
 private val Bg = Color(0xFF070B18)
 private val Panel = Color(0xFF111A2D)
@@ -111,7 +113,9 @@ private fun JarvisHome(greeting: String, speak: (String) -> Unit) {
     var command by remember { mutableStateOf("") }
     var section by remember { mutableStateOf("Ana Sayfa") }
     var status by remember { mutableStateOf("HAZIR") }
-    var messages by remember { mutableStateOf(listOf("JARVIS" to greeting)) }
+    var messages by remember { mutableStateOf(loadMessages(context).ifEmpty { listOf("JARVIS" to greeting) }) }
+
+    LaunchedEffect(messages) { saveMessages(context, messages) }
 
     val speechLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -137,8 +141,8 @@ private fun JarvisHome(greeting: String, speak: (String) -> Unit) {
     fun send() {
         val sent = command.trim()
         if (sent.isBlank()) return
-        val reply = "Baba, sohbet arayüzü hazır. Gerçek yapay zekâ bağlantısı henüz kurulmadı."
-        messages = messages + ("BABA" to sent) + ("JARVIS" to reply)
+        val reply = localReply(sent)
+        messages = (messages + ("BABA" to sent) + ("JARVIS" to reply)).takeLast(80)
         command = ""
         speak(reply)
     }
@@ -230,6 +234,11 @@ private fun JarvisHome(greeting: String, speak: (String) -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("SOHBET", color = Cyan, fontSize = 10.sp, letterSpacing = 2.sp,
                         modifier = Modifier.weight(1f))
+                    Text("SOHBETİ TEMİZLE", color = Muted, fontSize = 9.sp,
+                        modifier = Modifier.clickable {
+                            messages = listOf("JARVIS" to "Sohbet temizlendi Baba. Size nasıl yardımcı olayım?")
+                        })
+                    Spacer(Modifier.width(10.dp))
                     Text(section.uppercase(Locale("tr")), color = Muted, fontSize = 9.sp)
                 }
                 LazyColumn(Modifier.heightIn(max = 140.dp).padding(top = 8.dp), reverseLayout = true) {
@@ -268,6 +277,50 @@ private fun JarvisHome(greeting: String, speak: (String) -> Unit) {
                 letterSpacing = 1.5.sp,
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 12.dp))
         }
+    }
+}
+
+
+private fun loadMessages(context: android.content.Context): List<Pair<String, String>> {
+    return try {
+        val raw = context.getSharedPreferences("jarvis_preferences", android.content.Context.MODE_PRIVATE)
+            .getString("chat_history", null) ?: return emptyList()
+        val array = JSONArray(raw)
+        (0 until array.length()).map { index ->
+            val item = array.getJSONObject(index)
+            item.getString("role") to item.getString("text")
+        }
+    } catch (_: Exception) { emptyList() }
+}
+
+private fun saveMessages(context: android.content.Context, messages: List<Pair<String, String>>) {
+    val array = JSONArray()
+    messages.takeLast(80).forEach { (role, text) ->
+        array.put(JSONObject().put("role", role).put("text", text))
+    }
+    context.getSharedPreferences("jarvis_preferences", android.content.Context.MODE_PRIVATE)
+        .edit().putString("chat_history", array.toString()).apply()
+}
+
+private fun localReply(input: String): String {
+    val q = input.lowercase(Locale("tr", "TR"))
+    val now = Calendar.getInstance()
+    return when {
+        listOf("saat kaç", "şu an saat", "saat nedir").any { q.contains(it) } ->
+            "Şu an saat %02d:%02d Baba.".format(now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE))
+        listOf("bugün günlerden", "hangi gün", "tarih ne", "bugünün tarihi").any { q.contains(it) } ->
+            "Bugünün tarihi %02d.%02d.%04d Baba.".format(
+                now.get(Calendar.DAY_OF_MONTH), now.get(Calendar.MONTH) + 1, now.get(Calendar.YEAR))
+        q.contains("sen kimsin") ->
+            "Ben JARVIS, kişisel asistanınızım Baba. Şu an temel yerel özelliklerle çalışıyorum; gerçek yapay zekâ bağlantısı henüz eklenmedi."
+        listOf("ne yapabilirsin", "yardım", "özelliklerin").any { q.contains(it) } ->
+            "Şu an sohbet geçmişini saklayabilir, saat ve tarih gibi temel sorulara cevap verebilir, Türkçe sesli giriş ve sesli yanıt kullanabilirim. İnternet araştırması ve gelişmiş AI henüz bağlı değil Baba."
+        q.contains("merhaba") || q.contains("selam") ->
+            "Merhaba Baba. Size nasıl yardımcı olabilirim?"
+        q.contains("teşekkür") ->
+            "Rica ederim Baba. Her zaman yardımcı olmaya hazırım."
+        else ->
+            "Baba, mesajınızı aldım: \"$input\". Bu sürümde henüz gerçek AI bağlantısı olmadığı için kapsamlı cevap üretemiyorum. Saat, tarih veya mevcut özelliklerim hakkında soru sorabilirsiniz."
     }
 }
 
