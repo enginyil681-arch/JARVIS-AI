@@ -284,6 +284,54 @@ private fun JarvisHome(greeting: String, speak: (String) -> Unit) {
 
 private fun handlePhoneCommand(context: android.content.Context, input: String): String? {
     val q = input.lowercase(Locale("tr", "TR"))
+
+    fun launch(intent: Intent, success: String): String {
+        return try {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+            success
+        } catch (_: Exception) {
+            "Bu işlem telefonunuzda açılamadı Baba."
+        }
+    }
+
+    if (q.startsWith("google'da ara ") || q.startsWith("google da ara ") ||
+        q.startsWith("internette ara ") || q.startsWith("web'de ara ")) {
+        val query = input.substringAfter("ara", "").trim()
+        if (query.isNotBlank()) {
+            val uri = android.net.Uri.parse("https://www.google.com/search?q=" + android.net.Uri.encode(query))
+            return launch(Intent(Intent.ACTION_VIEW, uri), "İnternet aramasını açıyorum Baba.")
+        }
+    }
+
+    if (q.contains("alarm kur") || q.contains("alarm ayarla")) {
+        val match = Regex("(?:saat\\\\s*)?(\\\\d{1,2})[:.](\\\\d{2})").find(q)
+        if (match != null) {
+            val hour = match.groupValues[1].toIntOrNull()
+            val minute = match.groupValues[2].toIntOrNull()
+            if (hour != null && minute != null && hour in 0..23 && minute in 0..59) {
+                val alarm = Intent(android.provider.AlarmClock.ACTION_SET_ALARM)
+                    .putExtra(android.provider.AlarmClock.EXTRA_HOUR, hour)
+                    .putExtra(android.provider.AlarmClock.EXTRA_MINUTES, minute)
+                    .putExtra(android.provider.AlarmClock.EXTRA_MESSAGE, "JARVIS hatırlatması")
+                    .putExtra(android.provider.AlarmClock.EXTRA_SKIP_UI, false)
+                return launch(alarm, "%02d:%02d için alarm ekranını açıyorum Baba.".format(hour, minute))
+            }
+        }
+        return "Alarm saati belirtin. Örneğin: 07:30 için alarm kur Baba."
+    }
+
+    if (q.contains("takvimi aç") || q.contains("takvim aç")) {
+        return launch(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_CALENDAR),
+            "Takvimi açıyorum Baba.")
+    }
+    if (q.contains("hesap makinesi aç") || q.contains("hesap makinesini aç")) {
+        return launch(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_CALCULATOR),
+            "Hesap makinesini açıyorum Baba.")
+    }
+    if (q.contains("telefon") && (q.contains("ara") || q.contains("arama ekranı"))) {
+        return launch(Intent(Intent.ACTION_DIAL), "Telefon arama ekranını açıyorum Baba.")
+    }
     val action = when {
         q.contains("wifi ayar") || q.contains("wi-fi ayar") -> android.provider.Settings.ACTION_WIFI_SETTINGS
         q.contains("bluetooth ayar") -> android.provider.Settings.ACTION_BLUETOOTH_SETTINGS
