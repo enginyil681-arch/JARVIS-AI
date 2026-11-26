@@ -14,9 +14,11 @@ Android-first personal assistant project. This repository currently contains the
 - Basic local answers for time, date, help, greetings, and thanks.
 - Supported voice input and Android text-to-speech output.
 - Basic phone actions: open Wi-Fi, Bluetooth, network, display, sound, location, and general Settings screens; launch YouTube, WhatsApp, Spotify, Chrome, and Maps when installed.
+- Launch supported Android alarm, calendar, calculator, and dialer screens.
+- Open a browser search from a spoken or typed web-search command.
 
 ## Not implemented yet
-No real AI backend, web search, cloud memory/synchronization, always-on wake word, or phone setting controls are implemented in this version. These capabilities must not be represented as working until implemented and tested.
+No real AI backend, AI-powered web research, cloud memory/synchronization, always-on wake word, scheduled background reminders, flashlight control, or Windows app are implemented in this version. Web-search commands open a browser search; they do not mean JARVIS itself has read or summarized the results. Android intents may vary by device and installed apps.
 
 ## Build requirements
 - JDK 17
