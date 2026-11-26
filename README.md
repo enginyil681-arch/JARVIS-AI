@@ -2,7 +2,7 @@
 
 Android-first personal assistant project. This repository currently contains the initial mobile interface prototype.
 
-## Included in v0.1.0
+## Included in current Android prototype
 - Dark navy interface with cyan and violet accents.
 - Animated holographic-style JARVIS orb.
 - Four feature areas: Code & Development, Library & Translation, Education, Media & Automation.
@@ -10,7 +10,10 @@ Android-first personal assistant project. This repository currently contains the
 - Time-based Turkish greeting on later launches.
 - Android text-to-speech greeting and replies. Voice quality and gender depend on the installed Android TTS engine.
 - Optional speech recognition through Android's speech recognition service after microphone permission is granted.
-- Local demonstration chat only; it is not connected to an AI model yet.
+- Local demonstration chat with on-device conversation history (last 80 messages) and a clear-chat control.
+- Basic local answers for time, date, help, greetings, and thanks.
+- Supported voice input and Android text-to-speech output.
+- Basic phone actions: open Wi-Fi, Bluetooth, network, display, sound, location, and general Settings screens; launch YouTube, WhatsApp, Spotify, Chrome, and Maps when installed.
 
 ## Not implemented yet
 No real AI backend, web search, cloud memory/synchronization, always-on wake word, or phone setting controls are implemented in this version. These capabilities must not be represented as working until implemented and tested.
