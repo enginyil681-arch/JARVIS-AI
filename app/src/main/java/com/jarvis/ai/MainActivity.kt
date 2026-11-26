@@ -141,7 +141,7 @@ private fun JarvisHome(greeting: String, speak: (String) -> Unit) {
     fun send() {
         val sent = command.trim()
         if (sent.isBlank()) return
-        val reply = localReply(sent)
+        val reply = handlePhoneCommand(context, sent) ?: localReply(sent)
         messages = (messages + ("BABA" to sent) + ("JARVIS" to reply)).takeLast(80)
         command = ""
         speak(reply)
@@ -280,6 +280,50 @@ private fun JarvisHome(greeting: String, speak: (String) -> Unit) {
     }
 }
 
+
+
+private fun handlePhoneCommand(context: android.content.Context, input: String): String? {
+    val q = input.lowercase(Locale("tr", "TR"))
+    val action = when {
+        q.contains("wifi ayar") || q.contains("wi-fi ayar") -> android.provider.Settings.ACTION_WIFI_SETTINGS
+        q.contains("bluetooth ayar") -> android.provider.Settings.ACTION_BLUETOOTH_SETTINGS
+        q.contains("internet ayar") || q.contains("ağ ayar") -> android.provider.Settings.ACTION_WIRELESS_SETTINGS
+        q == "ayarları aç" || q.contains("telefon ayar") -> android.provider.Settings.ACTION_SETTINGS
+        q.contains("ekran ayar") -> android.provider.Settings.ACTION_DISPLAY_SETTINGS
+        q.contains("ses ayar") -> android.provider.Settings.ACTION_SOUND_SETTINGS
+        q.contains("konum ayar") -> android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS
+        else -> null
+    }
+    if (action != null) {
+        return try {
+            context.startActivity(Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            "İstediğiniz sistem ayarlarını açıyorum Baba."
+        } catch (_: Exception) {
+            "Bu ayarlar ekranı cihazınızda açılamadı Baba."
+        }
+    }
+    val app = when {
+        q.contains("youtube") -> "com.google.android.youtube"
+        q.contains("whatsapp") -> "com.whatsapp"
+        q.contains("spotify") -> "com.spotify.music"
+        q.contains("chrome") -> "com.android.chrome"
+        q.contains("harita") -> "com.google.android.apps.maps"
+        else -> null
+    }
+    if (app != null) {
+        return try {
+            val launch = context.packageManager.getLaunchIntentForPackage(app)
+            if (launch == null) "Bu uygulama telefonunuzda yüklü görünmüyor Baba."
+            else {
+                context.startActivity(launch)
+                "Uygulamayı açıyorum Baba."
+            }
+        } catch (_: Exception) {
+            "Uygulama açılamadı Baba."
+        }
+    }
+    return null
+}
 
 private fun loadMessages(context: android.content.Context): List<Pair<String, String>> {
     return try {
