@@ -273,7 +273,7 @@ private fun JarvisHome(greeting: String, speak: (String) -> Unit) {
                     }
                 }
             }
-            Text("JARVIS AI  •  SÜRÜM 0.1.0", color = Color(0xFF526783), fontSize = 8.sp,
+            Text("JARVIS AI  •  SÜRÜM 0.2.0", color = Color(0xFF526783), fontSize = 8.sp,
                 letterSpacing = 1.5.sp,
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 12.dp))
         }
@@ -305,7 +305,7 @@ private fun handlePhoneCommand(context: android.content.Context, input: String):
     }
 
     if (q.contains("alarm kur") || q.contains("alarm ayarla")) {
-        val match = Regex("(?:saat\\\\s*)?(\\\\d{1,2})[:.](\\\\d{2})").find(q)
+        val match = Regex("(?:saat\\s*)?(\\d{1,2})[:.](\\d{2})").find(q)
         if (match != null) {
             val hour = match.groupValues[1].toIntOrNull()
             val minute = match.groupValues[2].toIntOrNull()
